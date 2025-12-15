@@ -13,6 +13,8 @@
     "dev:be": "npm run start:dev -w backend",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css}\"",
     "lint": "npm run lint:front && npm run lint:back",
+    "lint:front": "npm run lint -w frontend",
+    "lint:back": "npm run lint -w backend",
     "prepare": "husky"
   },
   "repository": {
@@ -28,8 +30,22 @@
     "@commitlint/cli": "^20.2.0",
     "@commitlint/config-conventional": "^20.2.0",
     "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2"
+  },
+  "lint-staged": {
+    "frontend/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "backend/**/*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{js,json,css}": [
+      "prettier --write"
+    ]
   },
   "engines": {
     "node": "v24.12.0",
