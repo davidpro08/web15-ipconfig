@@ -7,10 +7,10 @@ async function bootstrap() {
 
   // Swagger 설정
   const configSwagger = new DocumentBuilder()
-    .setTitle('BangBang API')
-    .setDescription('BangBang API description')
+    .setTitle('Web15 IPConfig API')
+    .setDescription('Web15 IPConfig API description')
     .setVersion('1.0')
-    .addTag('BangBang')
+    .addTag('Web15 IPConfig')
     .build();
 
   const documentFactory = SwaggerModule.createDocument(app, configSwagger);
