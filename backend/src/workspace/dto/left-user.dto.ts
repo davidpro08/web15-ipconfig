@@ -9,6 +9,14 @@ export class LeaveUserDTO {
   })
   @IsString()
   projectId: string;
+
+  @ApiProperty({
+    description: '유저 ID',
+    example: 'u1',
+    required: true,
+  })
+  @IsString()
+  userId: string;
 }
 
 export class LeftUserDTO {

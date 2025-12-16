@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString } from 'class-validator';
+import { IsObject, IsString } from 'class-validator';
 
 export class User {
   @ApiProperty({
@@ -27,7 +27,7 @@ export class User {
   color: string;
 }
 
-export class JoinUserDTO extends User {
+export class JoinUserDTO {
   @ApiProperty({
     description: '프로젝트 ID',
     example: 'p1',
@@ -35,6 +35,14 @@ export class JoinUserDTO extends User {
   })
   @IsString()
   projectId: string;
+
+  @ApiProperty({
+    description: '유저 정보',
+    type: User,
+    required: true,
+  })
+  @IsObject()
+  user: User;
 }
 
 export class JoindedUserDTO extends User {}
