@@ -21,9 +21,9 @@ describe('WorkspaceGateway', () => {
     clientMock = {
       join: jest.fn(),
       leave: jest.fn(),
+      data: {},
     };
     workspaceServiceMock = {
-      getRoomIdByUserId: jest.fn(),
       joinUser: jest.fn(),
       leaveUser: jest.fn(),
       handleDisconnect: jest.fn(),
@@ -38,7 +38,6 @@ describe('WorkspaceGateway', () => {
 
     gateway = module.get<WorkspaceGateway>(WorkspaceGateway);
 
-    // WebSocket 서버 목킹 주입
     (gateway as unknown as { server: Server }).server = serverMock as Server;
 
     jest.clearAllMocks();
@@ -73,7 +72,7 @@ describe('WorkspaceGateway', () => {
     it('disconnect 시 user:left, user:status(OFFLINE) 이벤트를 발생시킨다', () => {
       // GIVEN
       workspaceServiceMock.handleDisconnect = jest.fn().mockReturnValue({
-        roomId: 'p1',
+        roomId: 'w1',
         userId: 'u1',
       });
 
@@ -81,8 +80,10 @@ describe('WorkspaceGateway', () => {
       gateway.handleDisconnect(clientMock as Socket);
 
       // THEN
-      expect(workspaceServiceMock.handleDisconnect).toHaveBeenCalledWith('s1');
-      expect(serverMock.to).toHaveBeenCalledWith('p1');
+      expect(workspaceServiceMock.handleDisconnect).toHaveBeenCalledWith(
+        clientMock,
+      );
+      expect(serverMock.to).toHaveBeenCalledWith('w1');
       expect(serverMock.emit).toHaveBeenCalledWith('user:status', {
         status: 'OFFLINE',
       });
@@ -94,7 +95,7 @@ describe('WorkspaceGateway', () => {
     // 값 모킹해놓기
     beforeEach(() => {
       workspaceServiceMock.joinUser = jest.fn().mockReturnValue({
-        roomId: 'p1',
+        roomId: 'w1',
         user: {
           id: 'u1',
           nickname: 'user1',
@@ -109,7 +110,7 @@ describe('WorkspaceGateway', () => {
     it('user:join 이벤트 발생 시 일련의 과정을 거친 후 user:joined, user:status 이벤트 발생', async () => {
       // GIVEN
       const payload: JoinUserDTO = {
-        projectId: 'p1',
+        workspaceId: 'w1',
         user: {
           id: 'u1',
           nickname: 'user1',
@@ -130,7 +131,7 @@ describe('WorkspaceGateway', () => {
     it('user:join 이벤트 발생 시 client가 방에 들어가는지', async () => {
       // GIVEN
       const payload: JoinUserDTO = {
-        projectId: 'p1',
+        workspaceId: 'w1',
         user: {
           id: 'u1',
           nickname: 'user1',
@@ -142,13 +143,13 @@ describe('WorkspaceGateway', () => {
       await gateway.handleUserJoin(payload, clientMock as Socket);
 
       // THEN
-      expect(clientMock.join).toHaveBeenCalledWith('p1');
+      expect(clientMock.join).toHaveBeenCalledWith('w1');
     });
 
     it('user:join 이벤트 발생 시 workspaceService의 joinUser 메서드가 호출되는지', async () => {
       // GIVEN
       const payload: JoinUserDTO = {
-        projectId: 'p1',
+        workspaceId: 'w1',
         user: {
           id: 'u1',
           nickname: 'user1',
@@ -171,7 +172,7 @@ describe('WorkspaceGateway', () => {
     // 값 모킹해놓기
     beforeEach(() => {
       workspaceServiceMock.leaveUser = jest.fn().mockReturnValue({
-        roomId: 'p1',
+        roomId: 'w1',
         userId: 'u1',
       });
 
@@ -182,7 +183,7 @@ describe('WorkspaceGateway', () => {
     it('user:leave 이벤트 발생 시 일련의 과정을 거친 후 user:left, user:status 이벤트 발생', async () => {
       // GIVEN
       const payload: LeaveUserDTO = {
-        projectId: 'p1',
+        workspaceId: 'w1',
         userId: 'u1',
       };
 
@@ -199,7 +200,7 @@ describe('WorkspaceGateway', () => {
     it('user:leave 이벤트 발생 시 client가 방에서 나가는지', async () => {
       // GIVEN
       const payload: LeaveUserDTO = {
-        projectId: 'p1',
+        workspaceId: 'w1',
         userId: 'u1',
       };
 
@@ -207,13 +208,13 @@ describe('WorkspaceGateway', () => {
       await gateway.handleUserLeave(payload, clientMock as Socket);
 
       // THEN
-      expect(clientMock.leave).toHaveBeenCalledWith('p1');
+      expect(clientMock.leave).toHaveBeenCalledWith('w1');
     });
 
     it('user:leave 이벤트 발생 시 workspaceService의 leaveUser 메서드가 호출되는지', async () => {
       // GIVEN
       const payload: LeaveUserDTO = {
-        projectId: 'p1',
+        workspaceId: 'w1',
         userId: 'u1',
       };
 
@@ -230,8 +231,13 @@ describe('WorkspaceGateway', () => {
 
   describe('cursor:move', () => {
     beforeEach(() => {
-      workspaceServiceMock.getRoomIdByUserId = jest.fn().mockReturnValue('p1');
       serverMock.to = jest.fn().mockReturnValue(serverMock as Server);
+      clientMock = {
+        id: 's1',
+        join: jest.fn(),
+        leave: jest.fn(),
+        data: { roomId: 'w1', userId: 'u1' },
+      };
     });
 
     it('cursor:move 이벤트 발생 시 cursor:moved 이벤트 발생', () => {
@@ -245,15 +251,16 @@ describe('WorkspaceGateway', () => {
       };
 
       // WHEN
-      gateway.handleCursorMove(payload);
+      gateway.handleCursorMove(clientMock as Socket, payload);
 
       // THEN
       expect(serverMock.emit).toHaveBeenCalledWith('cursor:moved', payload);
-      expect(serverMock.to).toHaveBeenCalledWith('p1');
+      expect(serverMock.to).toHaveBeenCalledWith('w1');
     });
 
-    it('cursor:move 이벤트 발생 시 workspaceService의 getRoomIdByUserId 메서드가 호출되는지', () => {
+    it('socket.data.roomId가 없으면 emit 하지 않는다', () => {
       // GIVEN
+      clientMock.data = {};
       const payload: MoveCursorDTO = {
         userId: 'u1',
         moveData: {
@@ -263,12 +270,11 @@ describe('WorkspaceGateway', () => {
       };
 
       // WHEN
-      gateway.handleCursorMove(payload);
+      gateway.handleCursorMove(clientMock as Socket, payload);
 
       // THEN
-      expect(workspaceServiceMock.getRoomIdByUserId).toHaveBeenCalledWith(
-        payload.userId,
-      );
+      expect(serverMock.to).not.toHaveBeenCalled();
+      expect(serverMock.emit).not.toHaveBeenCalledWith('cursor:moved', payload);
     });
   });
 });
