@@ -2,8 +2,10 @@ import { LuLayers, LuTrash2 } from 'react-icons/lu';
 import SearchBar from './SearchBar';
 import TechLabel from './TeckLabel';
 import { TECH_STACKS } from '../constant/techStackInfo';
+import { useState } from 'react';
 
 export default function TechStackModal() {
+  const [search, setSearch] = useState<string>('');
   return (
     <div className="w-[400px] cursor-auto rounded-xl border border-gray-700 bg-gray-800 p-5">
       <WidgetHeader
@@ -11,9 +13,11 @@ export default function TechStackModal() {
         icon={<LuLayers className="text-purple-400" size={18} />}
         onRemove={() => {}}
       />
-      <SearchBar />
+      <SearchBar search={search} setSearch={setSearch} />
       <div className="flex flex-wrap gap-2">
-        {TECH_STACKS.map((te) => (
+        {TECH_STACKS.filter((te) =>
+          te.name.toLowerCase().includes(search.toLowerCase()),
+        ).map((te) => (
           <TechLabel key={te.name} techName={te.name} />
         ))}
       </div>
