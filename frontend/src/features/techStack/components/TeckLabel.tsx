@@ -1,5 +1,3 @@
-// utils/getTechIcon.ts
-
 import { useState } from 'react';
 
 // 예외 처리가 필요한 이름들을 매핑합니다. (Simple Icons 슬러그 기준)
@@ -96,8 +94,16 @@ const TechIcon = ({ name }: { name: string }) => {
 };
 
 export default function TechLabel({ techName }: { techName: string }) {
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    e.dataTransfer.setData('techName', techName);
+  };
+
   return (
-    <div className="mb-4 flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 px-2 py-1 select-none hover:border-blue-500 hover:bg-gray-700">
+    <div
+      className="mb-4 flex cursor-pointer items-center gap-2 rounded-lg border border-gray-700 px-2 py-1 select-none hover:border-blue-500 hover:bg-gray-700"
+      draggable={true}
+      onDragStart={handleDragStart}
+    >
       <TechIcon name={techName} />
       <span className="text-sm font-medium text-gray-300">{techName}</span>
     </div>
