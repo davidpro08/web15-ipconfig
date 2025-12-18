@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { io, Socket } from 'socket.io-client';
+
 import {
   LuShare2,
   LuFileText,
@@ -36,12 +38,20 @@ interface User {
   id: string;
   name: string;
   role: string;
-  color: string; // Tailwind color class (e.g. 'bg-purple-500')
+  color: string; // Tailwind color class (e.g. 'bg-purple-500') 또는 HEX
   textColor: string; // e.g. 'text-purple-500'
   style: string;
   time: string;
   status: string;
   activity: number[]; // Array for graph height
+}
+
+interface RemoteCursor {
+  userId: string;
+  nickname: string;
+  color: string;
+  x: number;
+  y: number;
 }
 
 // --- Mock Data ---
@@ -121,6 +131,103 @@ function WorkSpacePage() {
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
+  const [remoteCursors, setRemoteCursors] = useState<
+    Record<string, RemoteCursor>
+  >({});
+  const socketRef = useRef<Socket | null>(null);
+
+  // 임시로 고정된 워크스페이스 / 사용자 정보 (실제 서비스에서는 라우팅/로그인 정보 사용)
+  // 나중에 워크 스페이스를 지정해서 들어갈 수 있도록 해야 할 것 같습니다
+  const workspaceId = 'w1';
+
+  // 유저는 어떻게 처리해야 할까요..? 일단 커서를 구현하면서 임시로 만들어놨는데, 유저를 받는 걸 먼저 처리하는 게 시급할 것 같습니다.
+  const currentUser = useMemo(
+    () => ({
+      id: crypto.randomUUID(),
+      nickname: '임시 유저',
+      color: '#22c55e',
+    }),
+    [],
+  );
+
+  // ----- WebSocket 초기화 & 이벤트 바인딩 -----
+  useEffect(() => {
+    const socket = io('http://localhost:3000', {
+      transports: ['websocket'],
+    });
+    socketRef.current = socket;
+
+    socket.emit('user:join', {
+      workspaceId,
+      user: {
+        id: currentUser.id,
+        nickname: currentUser.nickname,
+        color: currentUser.color,
+      },
+    });
+
+    socket.on('user:joined', (user) => {
+      // 최초 커서 위치 기본값
+      // 일단 100, 100으로 해놓겠습니다
+      setRemoteCursors((prev) => ({
+        ...prev,
+        [user.id]: {
+          userId: user.id,
+          nickname: user.nickname,
+          color: user.color,
+          x: 100,
+          y: 100,
+        },
+      }));
+    });
+
+    socket.on('user:left', (userId: string) => {
+      setRemoteCursors((prev) => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+    });
+
+    socket.on(
+      'cursor:moved',
+      (payload: { userId: string; moveData: { x: number; y: number } }) => {
+        const { userId, moveData } = payload;
+
+        setRemoteCursors((prev) => {
+          const existing = prev[userId];
+          if (!existing) {
+            // 아직 join 이벤트를 못 받은 유저라면 기본값으로 생성
+            // 사실 이 부분은 정상 처리 시 user:joined에서 처리가 되는 부분이긴 합니다. 예외 처리 부분이긴 한데 중요한 부분은 아니에요.
+            return {
+              ...prev,
+              [userId]: {
+                userId,
+                nickname: userId,
+                color: '#3b82f6',
+                x: moveData.x,
+                y: moveData.y,
+              },
+            };
+          }
+          return {
+            ...prev,
+            [userId]: {
+              ...existing,
+              x: moveData.x,
+              y: moveData.y,
+            },
+          };
+        });
+      },
+    );
+
+    return () => {
+      socket.emit('user:leave', { workspaceId, userId: currentUser.id });
+      socket.disconnect();
+    };
+  }, [currentUser, workspaceId]);
+
   // --- Handlers ---
 
   const addWidget = (type: WidgetType) => {
@@ -149,10 +256,13 @@ function WorkSpacePage() {
     });
   };
 
+  // 커서 이동 스로틀링을 위한 ref
+  const lastEmitRef = useRef<number>(0);
+
   const handleMouseMove = (e: React.MouseEvent) => {
     if (draggingId) {
-      setWidgets(
-        widgets.map((w) => {
+      setWidgets((prev) =>
+        prev.map((w) => {
           if (w.id === draggingId) {
             return {
               ...w,
@@ -166,6 +276,23 @@ function WorkSpacePage() {
         }),
       );
     }
+
+    // --- 커서 이동 웹소켓 연동 + 스로틀링 ---
+    const now = performance.now();
+    const throttleMs = 100; // 100으로 해놨는데, 빠른 반응성이 필요하면 50 이하로 낮추는 게 좋다고 합니다.
+    if (now - lastEmitRef.current < throttleMs) return;
+    lastEmitRef.current = now;
+
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    socket.emit('cursor:move', {
+      userId: currentUser.id,
+      moveData: {
+        x: e.clientX,
+        y: e.clientY,
+      },
+    });
   };
 
   const handleMouseUp = () => {
@@ -332,6 +459,27 @@ ${techs.length ? techs : '| None | - | - |'}
                   onToggle={toggleTech}
                 />
               )}
+            </div>
+          ))}
+          {/* Remote Cursors Rendering */}
+          {Object.values(remoteCursors).map((cursor) => (
+            <div
+              key={cursor.userId}
+              className="pointer-events-none absolute z-[100] flex flex-col items-center"
+              style={{
+                left: cursor.x,
+                top: cursor.y,
+              }}
+            >
+              <div
+                className="h-4 w-4 rotate-45"
+                style={{
+                  backgroundColor: cursor.color,
+                }}
+              />
+              <span className="mt-1 rounded bg-black/70 px-2 py-0.5 text-xs whitespace-nowrap text-white">
+                {cursor.nickname}
+              </span>
             </div>
           ))}
         </main>
