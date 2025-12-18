@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
+import Cursor from '../components/ui/cursor';
 
 import {
   LuShare2,
@@ -465,21 +466,18 @@ ${techs.length ? techs : '| None | - | - |'}
           {Object.values(remoteCursors).map((cursor) => (
             <div
               key={cursor.userId}
-              className="pointer-events-none absolute z-[100] flex flex-col items-center"
+              className="pointer-events-none absolute z-[100]"
               style={{
                 left: cursor.x,
                 top: cursor.y,
               }}
             >
-              <div
-                className="h-4 w-4 rotate-45"
-                style={{
-                  backgroundColor: cursor.color,
-                }}
+              <Cursor
+                nickname={cursor.nickname}
+                color={cursor.color}
+                x={cursor.x}
+                y={cursor.y}
               />
-              <span className="mt-1 rounded bg-black/70 px-2 py-0.5 text-xs whitespace-nowrap text-white">
-                {cursor.nickname}
-              </span>
             </div>
           ))}
         </main>
