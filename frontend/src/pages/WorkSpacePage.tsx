@@ -91,7 +91,7 @@ const INITIAL_USERS: User[] = [
     activity: [50, 50, 50, 50, 50],
   },
   {
-    id: 'u3',
+    id: 'u4',
     name: 'snailw',
     role: 'PM',
     color: 'bg-green-500',
@@ -144,7 +144,7 @@ function WorkSpacePage() {
   const currentUser = useMemo(
     () => ({
       id: crypto.randomUUID(),
-      nickname: '임시 유저',
+      nickname: `임시 유저 ${crypto.getRandomValues(new Uint16Array(1))}`,
       color: '#22c55e',
     }),
     [],
@@ -198,12 +198,12 @@ function WorkSpacePage() {
           const existing = prev[userId];
           if (!existing) {
             // 아직 join 이벤트를 못 받은 유저라면 기본값으로 생성
-            // 사실 이 부분은 정상 처리 시 user:joined에서 처리가 되는 부분이긴 합니다. 예외 처리 부분이긴 한데 중요한 부분은 아니에요.
+            // 사실 이 부분은 정상 처리 시 user:joined에서 처리가 되야 하는 부분이긴 합니다. 나중에 모든 유저를 받아오는 로직이 추가되면 수정할게요.
             return {
               ...prev,
               [userId]: {
                 userId,
-                nickname: userId,
+                nickname: '임시 유저',
                 color: '#3b82f6',
                 x: moveData.x,
                 y: moveData.y,
@@ -279,7 +279,7 @@ function WorkSpacePage() {
 
     // --- 커서 이동 웹소켓 연동 + 스로틀링 ---
     const now = performance.now();
-    const throttleMs = 100; // 100으로 해놨는데, 빠른 반응성이 필요하면 50 이하로 낮추는 게 좋다고 합니다.
+    const throttleMs = 30;
     if (now - lastEmitRef.current < throttleMs) return;
     lastEmitRef.current = now;
 
