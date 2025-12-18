@@ -35,7 +35,12 @@ export const useSocket = ({
   const socketRef = useRef<Socket | null>(null);
 
   useEffect(() => {
-    const socket = io('http://localhost:3000', {
+    const socketUrl =
+      import.meta.env.MODE === 'production'
+        ? window.location.origin
+        : 'http://localhost:3000';
+
+    const socket = io(socketUrl, {
       transports: ['websocket'],
     });
     socketRef.current = socket;
