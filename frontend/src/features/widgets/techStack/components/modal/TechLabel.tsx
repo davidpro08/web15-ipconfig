@@ -1,6 +1,6 @@
 import { memo, useState } from 'react';
 import { getTechIconUrl } from '../../utils/getTechIconUrl';
-import { Badge } from '@/components/ui/badge';
+import { Badge } from '@/common/components/shadcn/badge';
 
 const TechIcon = ({ name }: { name: string }) => {
   const [error, setError] = useState(false);

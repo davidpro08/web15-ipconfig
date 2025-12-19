@@ -1,5 +1,5 @@
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/common/components/shadcn/button';
+import { Input } from '@/common/components/shadcn/input';
 import { LuSearch } from 'react-icons/lu';
 
 export default function SearchBar({

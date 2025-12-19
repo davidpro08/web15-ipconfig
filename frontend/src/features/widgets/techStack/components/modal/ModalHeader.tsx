@@ -1,4 +1,4 @@
-import { Button } from '@/components/ui/button';
+import { Button } from '@/common/components/shadcn/button';
 import { LuTrash2 } from 'react-icons/lu';
 
 interface HeaderProps {
