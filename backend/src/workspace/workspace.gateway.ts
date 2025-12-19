@@ -18,7 +18,7 @@ import { SetCursorDTO } from '../cursor/dto/set-cursor.dto';
 import { UpdateCursorDTO } from '../cursor/dto/update-cursor.dto';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const allowedOrigins = isProduction ? [] : '*';
+const allowedOrigins = isProduction ? process.env.HOST_URL : '*';
 
 @WebSocketGateway({
   namespace: 'workspace',
