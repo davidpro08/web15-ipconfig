@@ -14,7 +14,16 @@ import { MoveCursorDTO } from './dto/move-cursor.dto';
 import { UserStatus } from './dto/user-status.dto';
 import { WorkspaceService } from './workspace.service';
 
-@WebSocketGateway()
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = isProduction ? [] : '*';
+
+@WebSocketGateway({
+  namespace: 'workspace',
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+})
 export class WorkspaceGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server: Server;
