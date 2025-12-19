@@ -10,6 +10,7 @@ services:
       - app-network
     environment:
       - NODE_ENV=production
+      - HOST_URL=http://49.50.138.164/
     restart: unless-stopped
 
   frontend:

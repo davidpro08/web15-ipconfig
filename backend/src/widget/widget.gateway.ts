@@ -14,7 +14,7 @@ import { UpdateWidgetDto } from './dto/update-widget.dto';
 import { WorkspaceService } from '../workspace/workspace.service';
 
 const isProduction = process.env.NODE_ENV === 'production';
-const allowedOrigins = isProduction ? [] : '*';
+const allowedOrigins = isProduction ? process.env.HOST_URL : '*';
 
 @WebSocketGateway({
   namespace: 'workspace',
