@@ -1,8 +1,17 @@
 import { Module } from '@nestjs/common';
 import { WidgetGateway } from './widget.gateway';
-import { WidgetService } from './widget.service';
+import { WidgetMemoryService } from './widget.memory.service';
+import { WIDGET_SERVICE } from './widget.interface';
+import { WorkspaceModule } from '../workspace/workspace.module';
 
 @Module({
-  providers: [WidgetGateway, WidgetService],
+  imports: [WorkspaceModule],
+  providers: [
+    WidgetGateway,
+    {
+      provide: WIDGET_SERVICE,
+      useClass: WidgetMemoryService, // 나중에 WidgetRedisService로 교체 가능
+    },
+  ],
 })
 export class WidgetModule {}

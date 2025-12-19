@@ -17,9 +17,14 @@ import { CursorService } from '../cursor/cursor.service';
 import { SetCursorDTO } from '../cursor/dto/set-cursor.dto';
 import { UpdateCursorDTO } from '../cursor/dto/update-cursor.dto';
 
+const isProduction = process.env.NODE_ENV === 'production';
+const allowedOrigins = isProduction ? [] : '*';
+
 @WebSocketGateway({
+  namespace: 'workspace',
   cors: {
-    origin: '*',
+    origin: allowedOrigins,
+    credentials: true,
   },
 })
 export class WorkspaceGateway implements OnGatewayDisconnect {

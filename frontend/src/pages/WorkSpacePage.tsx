@@ -1,5 +1,4 @@
-import React, { useRef, useState } from 'react';
-
+import React, { useMemo, useCallback, useRef, useState } from 'react';
 import {
   LuShare2,
   LuFileText,
@@ -16,6 +15,7 @@ import {
   LuZoomOut,
   LuGithub,
 } from 'react-icons/lu';
+import TechStackModal from '../features/widgets/techStack/components/modal/TechStackModal';
 
 import Cursor from '../components/ui/cursor';
 import { getRandomColor } from '../utils/getRandomColor';
@@ -122,6 +122,7 @@ const TECH_OPTIONS = [
 // --- Components ---
 
 function WorkSpacePage() {
+  const [isTechStackModalOpen, setIsTechStackModalOpen] = useState(true);
   // Global State
   const [widgets, setWidgets] = useState<WidgetData[]>([]);
   const [techStack, setTechStack] = useState<Set<string>>(new Set(['React']));
@@ -186,6 +187,11 @@ function WorkSpacePage() {
   const removeWidget = (id: string) => {
     setWidgets(widgets.filter((w) => w.id !== id));
   };
+
+  // Tech Stack Modal Handler
+  const handleModalClose = useCallback(() => {
+    setIsTechStackModalOpen(false);
+  }, []);
 
   // Drag Logic
   const handleMouseDown = (
@@ -578,6 +584,9 @@ ${techs.length ? techs : '| None | - | - |'}
             </button>
           </div>
         </div>
+        {isTechStackModalOpen && (
+          <TechStackModal onModalClose={handleModalClose} />
+        )}
       </div>
 
       {/* Export Modal */}
