@@ -1,0 +1,30 @@
+services:
+  backend:
+    image: ${NCP_REGISTRY_ENDPOINT}/${BACKEND_IMAGE}
+    env_file:
+      - .env
+    container_name: web15-ipconfig-backend
+    ports:
+      - '3000:3000'
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+
+  frontend:
+    image: ${NCP_REGISTRY_ENDPOINT}/${FRONTEND_IMAGE}
+    container_name: web15-ipconfig-frontend
+    ports:
+      - '80:80'
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge

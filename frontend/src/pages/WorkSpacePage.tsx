@@ -148,15 +148,25 @@ function WorkSpacePage() {
   const workspaceId = 'w1';
 
   // 유저는 어떻게 처리해야 할까요..? 일단 커서를 구현하면서 임시로 만들어놨는데, 유저를 받는 걸 먼저 처리하는 게 시급할 것 같습니다.
-  const currentUser = useMemo(
-    () => ({
-      id: crypto.randomUUID(),
-      nickname: `임시 유저 ${crypto.getRandomValues(new Uint16Array(1))}`,
+  const currentUser = useState(() => {
+    // Math.random()을 사용한 UUID 생성 (HTTPS가 아닌 환경에서도 작동)
+    const generateUUID = () => {
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      });
+    };
+
+    const randomNickname = Math.floor(Math.random() * 10000);
+
+    return {
+      id: generateUUID(),
+      nickname: `임시 유저 ${randomNickname}`,
       color: getRandomColor(),
       backgroundColor: getRandomColor(),
-    }),
-    [],
-  );
+    };
+  })[0];
 
   // ----- WebSocket 초기화 & 이벤트 바인딩 -----
   const { emitCursorMove } = useSocket({
